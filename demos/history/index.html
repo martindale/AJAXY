@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>
+        jQuery History Plugin (balupton edition)
+    </title>
+	
+	<!-- Include jQuery (History Requirement) -->
+	<script type="text/javascript" src="../../js/jquery-1.3.2.min.js"></script>
+	<!-- Include jQuery History (Production) -->
+	<!--<script type="text/javascript" src="../../js/jquery.history.min.js"></script>-->
+	<!-- Include jQuery History (Development/Testing) -->
+	<script type="text/javascript" src="../../js/jquery.history.js"></script>
+</head>
+<body>
+	
+	<h1>
+		<a href="http://jquery.com/plugins/project/jquery_history">jQuery History Plugin (balupton edition)</a>
+		<a href="http://github.com/balupton/AJAXY/downloads">download</a> |
+		<a href="http://github.com/balupton/AJAXY/">contribute</a>
+	</h1>
+	
+	<p>We will now go through using the jQuery History Plugin (balupton edition). Click the following links to go through the functionality:<br/>
+		<a href="#one">one</a>
+		<a href="#two">two</a>
+		<a href="#three">three</a>
+		<a href="#four">four</a>
+		<a href="#reset">reset</a>
+	</p>
+	
+	<p>Also fiddle with the hash/state in the url manually, and check out bookmarking and the back and forward buttons, or even refresh - they all work too! and for all browsers!</p>
+	
+	<hr />
+	
+	<p>Our current state is: <span id="state"></span></p>
+	
+	<p>Example of custom binding: <span id="custom"></span></p>
+	
+	<p>Example of binding overloading: <span id="overloading"></span></p>
+	
+	<hr />
+	
+	<pre>
+var $state = $('#state'),
+	$custom = $('#custom'),
+	$overloading = $('#overloading');
+
+$.History.bind(function(state){
+	// Our Generic Handler - Always runs last.
+	$state.text(state);
+});
+
+$.History.bind('two',function(state){
+	// Custom Handler for: two
+	$custom.text('two is one more than one!');
+});
+
+$.History.bind('three',function(state){
+	// Custom Handler for: three
+	$overloading.text('three is 1');
+});
+$.History.bind('three',function(state){
+	// Custom Handler for: three
+	$overloading.text($overloading.text()+'+2');
+});
+$.History.bind('three',function(state){
+	// Custom Handler for: three
+	$overloading.text($overloading.text()+'=3');
+});
+
+$.History.bind('reset',function(state){
+	// Custom Handler for: reset
+	$state.add($custom).add($overloading).text('');
+});
+	</pre>
+	
+	<script type="text/javascript">
+		var $state = $('#state'),
+			$custom = $('#custom'),
+			$overloading = $('#overloading');
+		
+		$.History.bind(function(state){
+			// Our Generic Handler - Always runs last.
+			$state.text(state);
+		});
+		
+		$.History.bind('two',function(state){
+			// Custom Handler for: two
+			$custom.text('two is one more than one!');
+		});
+		
+		$.History.bind('three',function(state){
+			// Custom Handler for: three
+			$overloading.text('three is 1');
+		});
+		$.History.bind('three',function(state){
+			// Custom Handler for: three
+			$overloading.text($overloading.text()+'+2');
+		});
+		$.History.bind('three',function(state){
+			// Custom Handler for: three
+			$overloading.text($overloading.text()+'=3');
+		});
+		
+		$.History.bind('reset',function(state){
+			// Custom Handler for: reset
+			$state.add($custom).add($overloading).text('');
+		});
+	</script>
+	
+</body>
+</html>
