@@ -1,7 +1,7 @@
 /**
  * jQuery History Plugin (balupton edition) - Simple History Handler/Remote for Hash, State, Bookmarking, and Forward Back Buttons
  * Copyright (C) 2008-2009 Benjamin Arthur Lupton
- * http://www.balupton/projects/jquery_history/
+ * http://www.balupton.com/projects/jquery_history/
  *
  * This file is part of jQuery History Plugin (balupton edition).
  * 
@@ -167,7 +167,7 @@
 			{	// We are IE<8
 				$.History.$iframe.contentWindow.document.open();
 				$.History.$iframe.contentWindow.document.close();
-				$.History.$iframe.contentWindow.document.location.hash = state;						
+				$.History.$iframe.contentWindow.document.location.hash = hash;						
 			}
 		},
 		

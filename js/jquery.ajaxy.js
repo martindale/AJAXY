@@ -1,7 +1,7 @@
 /**
  * jQuery Ajaxy Plugin (balupton edition) - Ajax extension for history remote
  * Copyright (C) 2008-2009 Benjamin Arthur Lupton
- * http://www.balupton/projects/jquery_ajaxy/
+ * http://www.balupton.com/projects/jquery_ajaxy/
  *
  * This file is part of jQuery History Plugin (balupton edition).
  * 
