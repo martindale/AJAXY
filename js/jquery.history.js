@@ -20,8 +20,8 @@
  *
  * @name jqsmarty: jquery.history.js
  * @package jQuery History Plugin (balupton edition)
- * @version 1.0.1-final
- * @date July 11, 2009
+ * @version 1.1.0-final
+ * @date July 14, 2009
  * @category jquery plugin
  * @author Benjamin "balupton" Lupton {@link http://www.balupton.com}
  * @copyright (c) 2008-2009 Benjamin Arthur Lupton {@link http://www.balupton.com}
@@ -43,6 +43,10 @@
  ***
  * CHANGELOG
  **
+ * v1.1.0-final, July 14, 2009
+ * - Rewrote IE<8 hash code
+ * - Cut down format to accept all hash types
+ * 
  * v1.0.1-final, July 11, 2009
  * - Restructured a little bit
  * - Documented
@@ -106,7 +110,10 @@
 		 */
 		format: function ( hash ) {
 			// Format the hash
-			hash = hash.replace(/^.+?#/g,'').replace(/^#?\/?|\/?$/g, '');
+			hash = hash
+				.replace(/^.*#/g, '') /* strip anything before the anchor in case we were passed a url */
+				;
+			
 			// Return the hash
 			return hash;
 		},
@@ -116,6 +123,7 @@
 		 */
         getState: function ( ) {
 			var History = $.History;
+			
 			// Get the current state
 			return History.state;
         },
@@ -127,8 +135,10 @@
 			var History = $.History;
 			// Format the state
 			state = History.format(state)
+			
 			// Apply the state
 			History.state = state;
+			
 			// Return the state
 			return History.state;
 		},
@@ -138,60 +148,64 @@
 		 */
 		getHash: function ( ) {
 			var History = $.History;
-			// Get hash
-			var hash = window.location.hash || location.hash;
-			// Format the hash
-			hash = History.format(hash);
+			
+			// Get the hash
+			var hash = History.format(window.location.hash || location.hash);
+			
 			// Return the hash
 			return hash;
 		},
+		
 		/**
-		 * Set the current hash of the browser
+		 * Set the current hash of the browser and iframe if present
 		 * @param {String} hash
 		 */
 		setHash: function ( hash ) {
 			var History = $.History;
+			
 			// Prepare hash
-			hash = $.History.format(hash);
-			hash = hash.replace(/^\/?|\/?(\?)|\/?$/g, '/$1');
+			hash = History.format(hash);
 			
 			// Write hash
 			if ( typeof window.location.hash !== 'undefined' ) {
-				window.location.hash = hash;
-			} else {
+				if ( window.location.hash !== hash ) {
+					window.location.hash = hash;
+				}
+			} else if ( location.hash !== hash ) {
 				location.hash = hash;
 			}
 			
-			// Update IE<8 History
-			if ( $.browser.msie && parseInt($.browser.version, 10) < 8 )
-			{	// We are IE<8
-				$.History.$iframe.contentWindow.document.open();
-				$.History.$iframe.contentWindow.document.close();
-				$.History.$iframe.contentWindow.document.location.hash = hash;						
-			}
+			// Done
+			return hash;
 		},
 		
 		/**
 		 * Go to the specific state - does not force a history entry like setHash
-		 * @param {String} state
+		 * @param {String} to
 		 */
-		go: function ( state ) {
+		go: function ( to ) {
 			var History = $.History;
 			
-			// Format the state
-			state = History.format(state);
+			// Format
+			to = History.format(to);
 			
-			// Get the current hash
+			// Get current
 			var hash = History.getHash();
+			var state = History.getState();
 			
-			// Are they different?
-			if ( hash !== state ) {
-				// Yes, create a history entry
-				History.setHash(state);
-				// Wait for hashchange
+			// Has the hash changed
+			if ( to !== hash ) {
+				// Yes, update the hash
+				// And wait for the next automatic fire
+				History.setHash(to);
 			} else {
-				// No change, but update state and fire
-				History.setState(state);
+				// Hash the state changed?
+				if ( to !== state ) {
+					// Yes, Update the state
+					History.setState(to);
+				}
+				
+				// Trigger our change
 				History.trigger();
 			}
 			
@@ -200,38 +214,17 @@
 		},
 		
 		/**
-		 * Fired when the hash is changed, either automaticly or manually
+		 * Handle when the hash has changed
 		 * @param {Event} e
 		 */
 		hashchange: function ( e ) {
 			var History = $.History;
 			
-			// Debug
-			if ( History.options.debug ) {
-				console.debug('History.hashchange', this, arguments);
-			}
-			
 			// Get Hash
 			var hash = History.getHash();
-			var state = History.getState();
 			
-			// Prevent IE 8 from fireing this twice
-			if ( (!History.$iframe && state === hash) || (History.$iframe && History.hash === History.$iframe.contentWindow.document.location.hash) ) {
-				// For some reason this works
-				return false;
-			}
-			
-			// Check
-			if ( state === hash ) {
-				// Nothing to do
-				return false;
-			}
-			
-			// Update the state with the new hash
-			History.setState(hash);
-			
-			// Fire the handler
-			History.trigger();
+			// Handle the new hash
+			History.go(hash);
 			
 			// All done
 			return true;
@@ -375,6 +368,7 @@
 				// Handle depending on the browser
 				if ( $.browser.msie ) {
 					// We are still IE
+					// IE6, IE7, etc
 				
 					// Append and $iframe to the document, as $iframes are required for back and forward
 					// Create a hidden $iframe for hash change tracking
@@ -384,36 +378,70 @@
 					History.$iframe.contentWindow.document.open();
 					History.$iframe.contentWindow.document.close();
 					
-					// Check for initial state
-					var hash = History.getHash();
-					if ( hash ) {
-						// Apply it to the iframe
-						History.$iframe.contentWindow.document.location.hash = hash;
-					}
-					
 					// Define the checker function (for bookmarks)
+					var iframeHit = false;
 					checker = function ( ) {
-						var iframeHash = History.format(History.$iframe.contentWindow.document.location.hash);
-						if ( History.getState() !== iframeHash ) {
-							// Back Button Change
-							History.setHash(History.$iframe.contentWindow.document.location.hash);
-						}
+						
+						// Fetch
 						var hash = History.getHash();
-						if ( History.getState() !== hash ) {
-							// The has has changed
-							History.go(hash);
+						var state = History.getState();
+						var iframeHash = History.format(History.$iframe.contentWindow.document.location.hash);
+						
+						// Check if the browser hash is different
+						if ( state !== hash ) {
+							// Browser hash is different
+							
+							// Check if we need to update the iframe
+							if ( !iframeHit ) {
+								// Write a iframe/history entry in the browsers back and forward
+								// alert('update iframe entry');
+								History.$iframe.contentWindow.document.open();
+								History.$iframe.contentWindow.document.close();
+								// alert('update iframe entry.');
+								
+								// Update the iframe hash
+								// alert('update iframe hash');
+								History.$iframe.contentWindow.document.location.hash = hash;
+								// alert('update iframe hash.');
+							}
+							
+							// Reset
+							iframeHit = false;
+							
+							// Fire
+							// alert('hashchange');
+							History.$window.trigger('hashchange');
+							// alert('hashchange.');
 						}
+						else {
+							// Browser hash is not different
+							
+							// Check if the iframe hash is different from the iframe state
+							if ( state !== iframeHash ) {
+								// Specify we were hit from the iframe
+								iframeHit = true;
+								
+								// Update the browser hash
+								// alert('set hash from iframe');
+								History.setHash(iframeHash);
+								// alert('set hash from iframe.');
+							}
+						}
+						
 					};
 				}
 				else {
 					// We are not IE
+					// Firefox, Opera, Etc
 				
 					// Define the checker function (for bookmarks, back, forward)
 					checker = function ( ) {
 						var hash = History.getHash();
-						if ( History.getState() !== hash ) {
-							// The has has changed
-							History.go(hash);
+						var state = History.getState();
+						// Check
+						if ( state !== hash ) {
+							// State change
+							History.$window.trigger('hashchange');
 						}
 					};
 				}
@@ -423,8 +451,10 @@
 			}
 			else {
 				// We are IE8
+				
+				// Fire the initial
 				var hash = History.getHash();
-				if (hash) {
+				if ( hash ) {
 					History.$window.trigger('hashchange');
 				}
 			}
@@ -434,7 +464,7 @@
 		}
 	
 	}; // We have finished extending/defining our Plugin
-
+	
 	// --------------------------------------------------
 	// Finish up
 	

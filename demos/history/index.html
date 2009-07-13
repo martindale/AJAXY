@@ -46,9 +46,12 @@ var $state = $('#state'),
 	$custom = $('#custom'),
 	$overloading = $('#overloading');
 
+var document_title = document.title;
+
 $.History.bind(function(state){
 	// Our Generic Handler - Always runs last.
 	$state.text(state);
+	document.title = document_title + ' | ' + state;
 });
 
 $.History.bind('two',function(state){
@@ -80,9 +83,12 @@ $.History.bind('reset',function(state){
 			$custom = $('#custom'),
 			$overloading = $('#overloading');
 		
+		var document_title = document.title;
+		
 		$.History.bind(function(state){
 			// Our Generic Handler - Always runs last.
 			$state.text(state);
+			document.title = document_title + ' | ' + state;
 		});
 		
 		$.History.bind('two',function(state){
